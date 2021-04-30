@@ -1,0 +1,46 @@
+URL: https://dev.to/esnaremaussa/single-sign-on-with-simplesamlphp-and-drupal-9-1h1b
+
+Configure SP
+
+lando composer require drupal/simplesamlphp_auth
+lando drush en simplesamlphp_auth -y
+
+configure https://sp2.lndo.site/admin/config/people/simplesamlphp_auth/sync
+
+lando ssh
+ln -nfs /app/vendor/simplesamlphp/simplesamlphp/www web/simplesaml
+
+add after RewriteCond %{REQUEST_URI} !/core/modules/statistics/statistics\.php$ in htaccess
+
+# Allow access to simplesamlphp scripts.
+  RewriteCond %{REQUEST_URI} !/simplesaml/[^/]*\.php$
+  RewriteCond %{REQUEST_URI} !/simplesaml/admin/[^/]*\.php$
+  RewriteCond %{REQUEST_URI} !/simplesaml/[^/]*\.php/sanitycheck/[^/]*\.php$
+  RewriteCond %{REQUEST_URI} !/simplesaml/[^/]*\.php/drupalauth/[^/]*\.php$
+  RewriteCond %{REQUEST_URI} !/simplesaml/[^/]*\.php/core/idp/[^/]*\.php$
+  RewriteCond %{REQUEST_URI} !/simplesaml/[^/]*\.php/saml/[^/]*\.php$
+  RewriteCond %{REQUEST_URI} !/simplesaml/saml2/idp/[^/]*\.php$
+  RewriteCond %{REQUEST_URI} !/simplesaml/saml2/idp/[^/]*\.php/drupal-userpass$
+  RewriteCond %{REQUEST_URI} !/simplesaml/[^/]*\.php/saml/sp/[^/]*\.php/default-sp$
+
+
+
+  cp -r vendor/simplesamlphp/simplesamlphp/config-templates/* vendor/simplesamlphp/simplesamlphp/config
+  cp -r vendor/simplesamlphp/simplesamlphp/metadata-templates/* vendor/simplesamlphp/simplesamlphp/metadata
+
+  Making changes on the config.php file
+  Making changes on the authsources.php file
+
+  mkdir -p vendor/simplesamlphp/simplesamlphp/cert
+ cd vendor/simplesamlphp/simplesamlphp/cert
+ openssl req -newkey rsa:3072 -new -x509 -days 3652 -nodes -out server.crt -keyout server.pem
+
+ open Open the file saml20-idp-hosted.php in SP
+ add :
+ 'auth' => 'drupal-userpass',
+
+
+
+Copy metadata https://sp2.lndo.site/simplesaml/module.php/saml/sp/metadata.php/default-sp?output=xhtml to IDP saml20-sp-remote.php file
+
+Copy IDP https://idp.lndo.site/simplesaml/saml2/idp/metadata.php?output=xhtml metadata to SP saml20-idp-remote.php file
